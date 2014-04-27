@@ -31,6 +31,7 @@
 //
 
 #import "FXForms.h"
+#import "UITableView+AnimatedArrayUpdate.h"
 #import <objc/runtime.h>
 
 
@@ -1134,6 +1135,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
                                        FXFormFieldTypeDate: [FXFormDatePickerCell class],
                                        FXFormFieldTypeTime: [FXFormDatePickerCell class],
                                        FXFormFieldTypeDateTime: [FXFormDatePickerCell class],
+                                       FXFormFieldTypeCountdown: [FXFormDatePickerCell class],
                                        FXFormFieldTypeImage: [FXFormImagePickerCell class]} mutableCopy];
         
         _controllerClassesForFieldTypes = [@{FXFormFieldTypeDefault: [FXFormViewController class]} mutableCopy];
@@ -1276,6 +1278,26 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
             fieldIndex ++;
         }
         sectionIndex ++;
+    }
+}
+
+- (void)reloadAnimated:(BOOL)animated
+{
+    NSArray *newSections = [FXFormSection sectionsWithForm:self.form controller:self];
+    if (!animated) {
+        self.sections = newSections;
+        [self.tableView reloadData];
+    } else {
+        NSArray *oldSections = self.sections;
+        self.sections = newSections;
+        // TODO: Also animate section changes.
+        if ([self.sections count] != [oldSections count]) {
+            [self.tableView reloadData];
+        } else {
+            [self.sections enumerateObjectsUsingBlock:^(FXFormSection *section, NSUInteger idx, BOOL *stop) {
+                [self.tableView updateFromArray:((FXFormSection *)oldSections[idx]).fields toArray:section.fields inSection:idx animated:YES];
+            }];
+        }
     }
 }
 
@@ -2032,7 +2054,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
     self.textView.scrollEnabled = NO;
     [self.contentView addSubview:self.textView];
     
-    self.detailTextLabel.textAlignment = UITextAlignmentLeft;
+    self.detailTextLabel.textAlignment = NSTextAlignmentLeft;
     self.detailTextLabel.numberOfLines = 0;
     
     [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self.textView action:NSSelectorFromString(@"becomeFirstResponder")]];
@@ -2080,7 +2102,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
     self.textView.text = [self.field fieldDescription];
     
     self.textView.returnKeyType = UIReturnKeyDefault;
-    self.textView.textAlignment = UITextAlignmentLeft;
+    self.textView.textAlignment = NSTextAlignmentLeft;
     self.textView.secureTextEntry = NO;
     
     if ([self.field.type isEqualToString:FXFormFieldTypeText])
@@ -2331,12 +2353,20 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
     {
         self.datePicker.datePickerMode = UIDatePickerModeTime;
     }
-    else
+    else if ([self.field.type isEqualToString:FXFormFieldTypeDateTime])
     {
         self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
     }
+    else
+    {
+        self.datePicker.datePickerMode = UIDatePickerModeCountDownTimer;
+    }
     
-    self.datePicker.date = self.field.value ?: ([self.field.placeholder isKindOfClass:[NSDate class]]? self.field.placeholder: [NSDate date]);
+    if ([self.field.type isEqualToString:FXFormFieldTypeCountdown]) {
+        self.datePicker.countDownDuration = [self.field.value doubleValue] ?: ([self.field.placeholder isKindOfClass:[NSNumber class]]? [self.field.placeholder doubleValue]: 0.0);
+    } else {
+        self.datePicker.date = self.field.value ?: ([self.field.placeholder isKindOfClass:[NSDate class]]? self.field.placeholder: [NSDate date]);
+    }
     
     [self setNeedsLayout];
 }
@@ -2353,7 +2383,11 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
 
 - (void)valueChanged
 {
-    self.field.value = self.datePicker.date;
+    if ([self.field.type isEqualToString:FXFormFieldTypeCountdown]) {
+        self.field.value = @(self.datePicker.countDownDuration);
+    } else {
+        self.field.value = self.datePicker.date;
+    }
     self.detailTextLabel.text = [self.field fieldDescription];
     [self setNeedsLayout];
     

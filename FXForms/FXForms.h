@@ -67,6 +67,7 @@ static NSString *const FXFormFieldTypeOption = @"option";
 static NSString *const FXFormFieldTypeDate = @"date";
 static NSString *const FXFormFieldTypeTime = @"time";
 static NSString *const FXFormFieldTypeDateTime = @"datetime";
+static NSString *const FXFormFieldTypeCountdown = @"countdown";
 static NSString *const FXFormFieldTypeImage = @"image";
 
 #endif
@@ -140,6 +141,8 @@ static NSString *const FXFormFieldTypeImage = @"image";
 - (Class)viewControllerClassForFieldType:(NSString *)fieldType;
 - (void)registerDefaultViewControllerClass:(Class)controllerClass;
 - (void)registerViewControllerClass:(Class)controllerClass forFieldType:(NSString *)fieldType;
+
+- (void)reloadAnimated:(BOOL)animated;
 
 @end
 

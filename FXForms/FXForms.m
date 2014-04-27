@@ -765,6 +765,21 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
     }
 }
 
+#pragma mark -
+#pragma mark Equality
+- (NSUInteger)hash
+{
+    return [self.key hash] ^ [self.type hash] ^ [self.title hash];
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (!object) return NO;
+    if (![object isKindOfClass:[self class]]) return NO;
+    FXFormField *field = (FXFormField *)object;
+    return [field.key isEqualToString:self.key] && [field.type isEqualToString:self.type] && [field.title isEqualToString:self.title];
+}
+
 @end
 
 
@@ -992,7 +1007,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
 @end
 
 
-@interface FXFormSection : NSObject
+@interface FXFormSection : NSObject <UITableViewSectionObject>
 
 + (NSArray *)sectionsWithForm:(id<FXForm>)form controller:(FXFormController *)formController;
 
@@ -1055,6 +1070,29 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
         _fields = [NSMutableArray array];
     }
     return _fields;
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger hash = [self.form hash];
+    if (self.header) hash ^= [self.header hash];
+//    if (self.footer) hash ^= [self.footer hash];
+    return hash;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (!object) return NO;
+    if (![object isKindOfClass:[self class]]) return NO;
+    FXFormSection *section = (FXFormSection *)object;
+    return [section.form isEqual:self.form] &&
+    [section.header isEqualToString:self.header];
+//    [section.footer isEqualToString:self.footer];
+}
+
+- (NSArray *)rows
+{
+    return [self.fields copy];
 }
 
 @end
@@ -1290,14 +1328,15 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
     } else {
         NSArray *oldSections = self.sections;
         self.sections = newSections;
-        // TODO: Also animate section changes.
-        if ([self.sections count] != [oldSections count]) {
-            [self.tableView reloadData];
-        } else {
-            [self.sections enumerateObjectsUsingBlock:^(FXFormSection *section, NSUInteger idx, BOOL *stop) {
-                [self.tableView updateFromArray:((FXFormSection *)oldSections[idx]).fields toArray:section.fields inSection:idx animated:YES];
-            }];
-        }
+        [self.tableView updateFromSectionsArray:oldSections toSectionsArray:newSections animated:YES];
+//        // TODO: Also animate section changes.
+//        if ([self.sections count] != [oldSections count]) {
+//            [self.tableView reloadData];
+//        } else {
+//            [self.sections enumerateObjectsUsingBlock:^(FXFormSection *section, NSUInteger idx, BOOL *stop) {
+//                [self.tableView updateFromArray:((FXFormSection *)oldSections[idx]).fields toArray:section.fields inSection:idx animated:YES];
+//            }];
+//        }
     }
 }
 

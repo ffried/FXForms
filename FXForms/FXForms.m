@@ -1020,6 +1020,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
 
 
 @implementation FXFormSection
+@synthesize rows;
 
 + (NSArray *)sectionsWithForm:(id<FXForm>)form controller:(FXFormController *)formController
 {
@@ -1093,6 +1094,14 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
 - (NSArray *)rows
 {
     return [self.fields copy];
+}
+
+- (BOOL)needsReloadFrom:(id<UITableViewSectionObject>)object
+{
+    if (!object) return YES;
+    if (![object isKindOfClass:[self class]]) return YES;
+    FXFormSection *section = (FXFormSection *)object;
+    return ![section.footer isEqualToString:self.footer];
 }
 
 @end

@@ -1338,14 +1338,6 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
         NSArray *oldSections = self.sections;
         self.sections = newSections;
         [self.tableView updateFromSectionsArray:oldSections toSectionsArray:newSections animated:YES];
-//        // TODO: Also animate section changes.
-//        if ([self.sections count] != [oldSections count]) {
-//            [self.tableView reloadData];
-//        } else {
-//            [self.sections enumerateObjectsUsingBlock:^(FXFormSection *section, NSUInteger idx, BOOL *stop) {
-//                [self.tableView updateFromArray:((FXFormSection *)oldSections[idx]).fields toArray:section.fields inSection:idx animated:YES];
-//            }];
-//        }
     }
 }
 

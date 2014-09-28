@@ -1622,7 +1622,7 @@ static BOOL *FXFormSetValueForKey(id<FXForm> form, id value, NSString *key)
 
 - (void)viewDidLoad
 {
-    [super loadView];
+    [super viewDidLoad];
     
     if (!self.tableView)
     {

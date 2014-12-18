@@ -647,7 +647,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 @end
 
 
-@interface FXFormSection : NSObject
+@interface FXFormSection : NSObject <UITableViewSectionObject>
 
 + (NSArray *)sectionsWithForm:(id<FXForm>)form controller:(FXFormController *)formController;
 

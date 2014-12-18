@@ -74,6 +74,7 @@ UIKIT_EXTERN NSString *const FXFormFieldTypeOption; //option
 UIKIT_EXTERN NSString *const FXFormFieldTypeDate; //date
 UIKIT_EXTERN NSString *const FXFormFieldTypeTime; //time
 UIKIT_EXTERN NSString *const FXFormFieldTypeDateTime; //datetime
+UIKIT_EXTERN NSString *const FXFormFieldTypeCountdown; // countdown
 UIKIT_EXTERN NSString *const FXFormFieldTypeImage; //image
 
 

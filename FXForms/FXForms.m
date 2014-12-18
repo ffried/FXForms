@@ -31,6 +31,7 @@
 //
 
 #import "FXForms.h"
+#import "UITableView+AnimatedArrayUpdate.h"
 #import <objc/runtime.h>
 
 
@@ -78,6 +79,7 @@ NSString *const FXFormFieldTypeOption = @"option";
 NSString *const FXFormFieldTypeDate = @"date";
 NSString *const FXFormFieldTypeTime = @"time";
 NSString *const FXFormFieldTypeDateTime = @"datetime";
+NSString *const FXFormFieldTypeCountdown = @"countdown";
 NSString *const FXFormFieldTypeImage = @"image";
 
 
@@ -478,6 +480,7 @@ static Class FXFormFieldInferClass(NSDictionary *dictionary)
              FXFormFieldTypeDate: [NSDate class],
              FXFormFieldTypeTime: [NSDate class],
              FXFormFieldTypeDateTime: [NSDate class],
+             FXFormFieldTypeCountdown: [NSNumber class],
              FXFormFieldTypeImage: [UIImage class]
              }[type];
 }
@@ -1342,6 +1345,21 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     }
 }
 
+#pragma mark -
+#pragma mark Equality
+- (NSUInteger)hash
+{
+    return [self.key hash] ^ [self.type hash] ^ [self.title hash];
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (!object) return NO;
+    if (![object isKindOfClass:[self class]]) return NO;
+    FXFormField *field = (FXFormField *)object;
+    return [field.key isEqualToString:self.key] && [field.type isEqualToString:self.type] && [field.title isEqualToString:self.title];
+}
+
 @end
 
 
@@ -1635,6 +1653,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
 
 @implementation FXFormSection
+@synthesize rows;
 
 + (NSArray *)sectionsWithForm:(id<FXForm>)form controller:(FXFormController *)formController
 {
@@ -1723,6 +1742,19 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     [_fields setArray:[FXFormField fieldsWithForm:self.form controller:controller]];
 }
 
+- (NSArray *)rows
+{
+    return [self.fields copy];
+}
+
+- (BOOL)needsReloadFrom:(id<UITableViewSectionObject>)object
+{
+    if (!object) return YES;
+    if (![object isKindOfClass:[self class]]) return YES;
+    FXFormSection *section = (FXFormSection *)object;
+    return ![section.footer isEqualToString:self.footer];
+}
+
 @end
 
 
@@ -1809,6 +1841,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
                                        FXFormFieldTypeDate: [FXFormDatePickerCell class],
                                        FXFormFieldTypeTime: [FXFormDatePickerCell class],
                                        FXFormFieldTypeDateTime: [FXFormDatePickerCell class],
+                                       FXFormFieldTypeCountdown: [FXFormDatePickerCell class],
                                        FXFormFieldTypeImage: [FXFormImagePickerCell class]} mutableCopy];
         _cellClassesForFieldClasses = [NSMutableDictionary dictionary];
         _controllerClassesForFieldTypes = [@{FXFormFieldTypeDefault: [FXFormViewController class]} mutableCopy];
@@ -2017,6 +2050,19 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
             fieldIndex ++;
         }
         sectionIndex ++;
+    }
+}
+
+- (void)reloadAnimated:(BOOL)animated
+{
+    NSArray *newSections = [FXFormSection sectionsWithForm:self.form controller:self];
+    if (!animated) {
+        self.sections = newSections;
+        [self.tableView reloadData];
+    } else {
+        NSArray *oldSections = self.sections;
+        self.sections = newSections;
+        [self.tableView updateFromSectionsArray:oldSections toSectionsArray:newSections animated:YES];
     }
 }
 
@@ -3304,12 +3350,20 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     {
         self.datePicker.datePickerMode = UIDatePickerModeTime;
     }
-    else
+    else if ([self.field.type isEqualToString:FXFormFieldTypeDateTime])
     {
         self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
     }
+    else
+    {
+        self.datePicker.datePickerMode = UIDatePickerModeCountDownTimer;
+    }
     
-    self.datePicker.date = self.field.value ?: ([self.field.placeholder isKindOfClass:[NSDate class]]? self.field.placeholder: [NSDate date]);
+    if ([self.field.type isEqualToString:FXFormFieldTypeCountdown]) {
+        self.datePicker.countDownDuration = [self.field.value doubleValue] ?: ([self.field.placeholder isKindOfClass:[NSNumber class]]? [self.field.placeholder doubleValue]: 0.0);
+    } else {
+        self.datePicker.date = self.field.value ?: ([self.field.placeholder isKindOfClass:[NSDate class]]? self.field.placeholder: [NSDate date]);
+    }
 }
 
 - (BOOL)canBecomeFirstResponder
@@ -3324,7 +3378,11 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
 - (void)valueChanged
 {
-    self.field.value = self.datePicker.date;
+    if ([self.field.type isEqualToString:FXFormFieldTypeCountdown]) {
+        self.field.value = @(self.datePicker.countDownDuration);
+    } else {
+        self.field.value = self.datePicker.date;
+    }
     self.detailTextLabel.text = [self.field fieldDescription];
     [self setNeedsLayout];
     

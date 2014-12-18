@@ -50,30 +50,33 @@
              
              @{FXFormFieldKey: @"age", FXFormFieldCell: [FXFormStepperCell class]},
              
-             //another regular field
+             //some more regular fields
              
              @"profilePhoto",
+             @"phone",
              
              //the country value in our form is a locale code, which isn't human readable
              //so we've used the FXFormFieldValueTransformer option to supply a value transformer
              
              @{FXFormFieldKey: @"country",
                FXFormFieldOptions: @[@"us", @"ca", @"gb", @"sa", @"be"],
-               FXFormFieldPlaceholder: @"None",
+               FXFormFieldDefaultValue: @"us",
                FXFormFieldValueTransformer: [[ISO3166CountryValueTransformer alloc] init]},
              
-             // this is a option field that uses a FXFormOptionPickerCell to display the available
-             // options in a UIPickerView
+             //this is an options field that uses a FXFormOptionPickerCell to display the available
+             //options in a UIPickerView
              
              @{FXFormFieldKey: @"language",
                FXFormFieldOptions: @[@"English", @"Spanish", @"French", @"Dutch"],
-               FXFormFieldPlaceholder: @"None",
+               FXFormFieldDefaultValue: @"English",
                FXFormFieldCell: [FXFormOptionPickerCell class]},
              
              //this is a multi-select options field - FXForms knows this because the
              //class of the field property is a collection (in this case, NSArray)
              
-             @{FXFormFieldKey: @"interests", FXFormFieldPlaceholder: @"None", FXFormFieldOptions: @[@"Videogames", @"Animals", @"Cooking"]},
+             @{FXFormFieldKey: @"interests",
+               FXFormFieldDefaultValue: @[@"Videogames"],
+               FXFormFieldOptions: @[@"Videogames", @"Animals", @"Cooking"]},
              
              //this is another multi-select options field, but in this case it's represented
              //as a bitfield. FXForms can't infer this from the property (which is just an integer), so
@@ -81,12 +84,22 @@
              
              @{FXFormFieldKey: @"otherInterests",
                FXFormFieldType: FXFormFieldTypeBitfield,
-               FXFormFieldPlaceholder: @"None",
+               FXFormFieldDefaultValue: @(InterestComputers),
                FXFormFieldOptions: @[@"Computers", @"Socializing", @"Sports"]},
 
              //this is a multiline text view that grows to fit its contents
              
-             @{FXFormFieldKey: @"about", FXFormFieldType: FXFormFieldTypeLongText},
+             @{FXFormFieldKey: @"about", FXFormFieldType: FXFormFieldTypeLongText, FXFormFieldPlaceholder: @"Text..."},
+             
+             //this is an options field that uses a FXFormOptionSegmentsCell to display the available
+             //options in a UIPickerView
+             
+             @{FXFormFieldHeader: @"Plan",
+               FXFormFieldKey: @"plan",
+               FXFormFieldTitle: @"",
+               FXFormFieldPlaceholder: @"Free",
+               FXFormFieldOptions: @[@"Micro", @"Normal", @"Maxi"],
+               FXFormFieldCell: [FXFormOptionSegmentsCell class]},
              
              //we want to add a section header here, so we use another config dictionary
              

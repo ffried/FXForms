@@ -1752,7 +1752,18 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     if (!object) return YES;
     if (![object isKindOfClass:[self class]]) return YES;
     FXFormSection *section = (FXFormSection *)object;
-    return ![section.footer isEqualToString:self.footer];
+    return ![section.footer isEqual:self.footer];
+}
+
+- (NSUInteger)hash {
+    return [self.header hash];
+}
+
+- (BOOL)isEqual:(id)object {
+    if (!object) return NO;
+    if (![object isKindOfClass:[self class]]) return NO;
+    FXFormSection *section = object;
+    return [section.header isEqual:self.header];
 }
 
 @end
